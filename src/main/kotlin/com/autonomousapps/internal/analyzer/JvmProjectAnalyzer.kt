@@ -70,6 +70,14 @@ internal abstract class JvmAnalyzer(
     }
   }
 
+  final override fun registerInternalAccessAnalysisTask(): TaskProvider<InternalAccessAnalysisTask>? {
+    return project.tasks.register("internalAccessAnalysis$taskNameSuffix", InternalAccessAnalysisTask::class.java) {
+      it.classes.setFrom(sourceSet.classesDirs)
+      it.projectPath.set(projectPath)
+      it.output.set(outputPaths.internalAccessAnalysisPath)
+    }
+  }
+
   final override fun registerFindDeclaredProcsTask(): TaskProvider<FindDeclaredProcsTask> {
     return project.tasks.register("findDeclaredProcs$taskNameSuffix", FindDeclaredProcsTask::class.java) {
       it.inMemoryCacheProvider.set(InMemoryCache.register(project))

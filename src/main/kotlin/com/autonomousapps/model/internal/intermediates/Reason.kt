@@ -363,6 +363,16 @@ internal sealed class Reason(open val reason: String) {
     override val configurationName: String = "implementation"
   }
 
+  @TypeLabel("internal_access")
+  @JsonClass(generateAdapter = false)
+  data class InternalAccess(override val reason: String) : Reason(reason) {
+    constructor(internalAccesses: Set<String>) : this(
+      buildReason(internalAccesses, "Accesses internal", Kind.InternalClass)
+    )
+
+    override val configurationName: String = "implementation"
+  }
+
   @TypeLabel("undeclared")
   @JsonClass(generateAdapter = false)
   object Undeclared : Reason("undeclared") {
@@ -420,6 +430,7 @@ private enum class Kind(
   Class("class", "classes"),
   Constant("constant", "constants"),
   InlineMember("inline member", "inline members"),
+  InternalClass("internal class", "internal classes"),
   LintRegistry("lint registry", "lint registries"),
   NativeBinary("native binary", "native binaries"),
   Reflection("time by reflection", "times by reflection"),

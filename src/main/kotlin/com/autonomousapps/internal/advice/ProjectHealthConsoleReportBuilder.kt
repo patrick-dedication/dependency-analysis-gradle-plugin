@@ -150,6 +150,7 @@ internal class ProjectHealthConsoleReportBuilder(
       moduleAdvice.forEach { m ->
         when (m) {
           is AndroidScore -> if (m.couldBeJvm()) append(m.text())
+          is InternalAccessAdvice -> append(m.text())
         }
       }
     }
@@ -314,6 +315,21 @@ internal class ProjectHealthConsoleReportBuilder(
       }
 
     return builder.toString()
+  }
+
+  private fun InternalAccessAdvice.text() = buildString {
+    appendReproducibleNewLine("Internal access violations detected:")
+    appendReproducibleNewLine("Project '$sourceProject' accesses internal implementation details of project '$targetProject':")
+
+    internalAccesses.forEach { access ->
+      appendReproducibleNewLine("  * ${access.getDisplayDescription()}")
+    }
+
+    appendReproducibleNewLine()
+    appendReproducibleNewLine("Consider:")
+    appendReproducibleNewLine("1. Moving the accessed classes to a shared module")
+    appendReproducibleNewLine("2. Making the accessed classes part of the public API")
+    appendReproducibleNewLine("3. Refactoring the accessing code to avoid internal dependencies")
   }
 
   private fun line(configuration: String, printableIdentifier: String, was: String = ""): String {

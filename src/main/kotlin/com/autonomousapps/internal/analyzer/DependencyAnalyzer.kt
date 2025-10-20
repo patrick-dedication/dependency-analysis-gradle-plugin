@@ -61,6 +61,8 @@ internal interface DependencyAnalyzer {
    */
   fun registerAbiAnalysisTask(abiExclusions: Provider<String>): TaskProvider<AbiAnalysisTask>? = null
 
+  fun registerInternalAccessAnalysisTask(): TaskProvider<InternalAccessAnalysisTask>? = null
+
   /** Compute this project's Android Score (lower score means it could be a JVM project). */
   fun registerAndroidScoreTask(
     synthesizeDependenciesTask: TaskProvider<SynthesizeDependenciesTask>,

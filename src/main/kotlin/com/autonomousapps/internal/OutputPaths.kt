@@ -45,6 +45,7 @@ internal class OutputPaths(
   val declaredProcPath = file("${intermediatesDir}/procs-declared.json")
   val abiAnalysisPath = file("${intermediatesDir}/abi.json")
   val abiDumpPath = file("${variantDirectory}/abi-dump.txt")
+  val internalAccessAnalysisPath = file("${intermediatesDir}/internal-access-analysis.txt")
   val dependenciesDir = dir("${variantDirectory}/dependencies")
   val explodedSourcePath = file("${intermediatesDir}/exploded-source.json")
   val explodingBytecodePath = file("${intermediatesDir}/exploding-bytecode.json")
