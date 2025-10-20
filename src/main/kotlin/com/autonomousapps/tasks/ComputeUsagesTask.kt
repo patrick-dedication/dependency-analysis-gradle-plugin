@@ -258,6 +258,11 @@ private class GraphVisitor(
           hasSecurityProvider = providers.isNotEmpty()
           reportBuilder[dependencyCoordinates, Kind.DEPENDENCY] = Reason.SecurityProvider(providers)
         }
+
+        is InternalAccessCapability -> {
+          // Internal access violations are handled specially
+          // This would be processed in a separate analysis phase
+        }
       }
     }
 

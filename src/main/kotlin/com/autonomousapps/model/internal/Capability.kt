@@ -438,3 +438,54 @@ internal data class SecurityProviderCapability(
     )
   }
 }
+
+@TypeLabel("internal_access")
+@JsonClass(generateAdapter = false)
+internal data class InternalAccessCapability(
+  /** Map of source project paths to internal classes they access in target projects. */
+  val internalAccesses: Map<String, Set<InternalAccess>>,
+) : Capability() {
+
+  companion object {
+    fun newInstance(internalAccesses: Map<String, Set<InternalAccess>>): InternalAccessCapability {
+      return InternalAccessCapability(internalAccesses.toSortedMap().efficient())
+    }
+  }
+
+  override fun merge(other: Capability): Capability {
+    val otherInternal = other as InternalAccessCapability
+    val merged = (internalAccesses + otherInternal.internalAccesses)
+      .mapValues { (project, accesses) ->
+        val otherAccesses = otherInternal.internalAccesses[project] ?: emptySet()
+        (accesses + otherAccesses).toSortedSet().efficient()
+      }
+    return newInstance(merged)
+  }
+
+  @JsonClass(generateAdapter = false)
+  data class InternalAccess(
+    val sourceProject: String,
+    val targetProject: String,
+    val accessedClass: String,
+    val accessedMember: String?,
+    val accessType: AccessType,
+    val isInternalApi: Boolean = false,
+  ) : Comparable<InternalAccess> {
+
+    enum class AccessType {
+      METHOD_CALL,
+      FIELD_ACCESS,
+      CLASS_REFERENCE,
+      CONSTRUCTOR_CALL,
+      INTERFACE_IMPLEMENTATION,
+      CLASS_EXTENSION
+    }
+
+    override fun compareTo(other: InternalAccess): Int = compareBy(
+      InternalAccess::sourceProject,
+      InternalAccess::targetProject,
+      InternalAccess::accessedClass,
+      InternalAccess::accessedMember
+    ).compare(this, other)
+  }
+}

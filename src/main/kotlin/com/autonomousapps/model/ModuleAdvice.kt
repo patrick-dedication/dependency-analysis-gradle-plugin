@@ -32,8 +32,14 @@ public sealed class ModuleAdvice : Comparable<ModuleAdvice> {
         .compare(this, other)
     }
 
-    // Impossible until we had another kind of ModuleAdvice.
-    error("Expected to be comparing AndroidScores, was this=${javaClass.simpleName}, other=${other.javaClass.simpleName}")
+    if (this is InternalAccessAdvice && other is InternalAccessAdvice) {
+      return compareBy(InternalAccessAdvice::sourceProject)
+        .thenBy(InternalAccessAdvice::targetProject)
+        .compare(this, other)
+    }
+
+    // Different types - compare by name
+    return name.compareTo(other.name)
   }
 
   internal companion object {
@@ -42,6 +48,73 @@ public sealed class ModuleAdvice : Comparable<ModuleAdvice> {
 
     /** Returns `true` if [moduleAdvice] is in any way actionable. */
     fun isNotEmpty(moduleAdvice: Set<ModuleAdvice>) = !isEmpty(moduleAdvice)
+  }
+}
+
+@TypeLabel("internal_access")
+@JsonClass(generateAdapter = false)
+public data class InternalAccessAdvice(
+  val sourceProject: String,
+  val targetProject: String,
+  val internalAccesses: Set<InternalAccess>,
+) : ModuleAdvice() {
+
+  override val name: String = "internal-access"
+
+  override fun isActionable(): Boolean = internalAccesses.isNotEmpty()
+
+  @JsonClass(generateAdapter = false)
+  public data class InternalAccess(
+    val accessedClass: String,
+    val accessedMember: String?,
+    val accessType: AccessType,
+    val isInternalApi: Boolean = false,
+    val recommendation: Recommendation,
+  ) {
+
+    public enum class AccessType {
+      METHOD_CALL,
+      FIELD_ACCESS,
+      CLASS_REFERENCE,
+      CONSTRUCTOR_CALL,
+      INTERFACE_IMPLEMENTATION,
+      CLASS_EXTENSION
+    }
+
+    public enum class Recommendation {
+      /** The accessed class should be moved to a shared module or made public API */
+      EXPOSE_AS_API,
+      /** The accessing code should be refactored to avoid internal access */
+      REFACTOR_ACCESS,
+      /** This internal access is acceptable (whitelisted) */
+      ACCEPTABLE,
+      /** Requires manual review to determine appropriate action */
+      MANUAL_REVIEW
+    }
+
+    public fun getDisplayDescription(): String = buildString {
+      append("Accesses internal ${accessType.name.lowercase().replace('_', ' ')}")
+      append(" of $accessedClass")
+      accessedMember?.let { append(".$it") }
+      if (isInternalApi) {
+        append(" (marked as internal API)")
+      }
+      append(" - Recommendation: ${recommendation.name.lowercase().replace('_', ' ')}")
+    }
+  }
+
+  internal companion object {
+    fun of(
+      sourceProject: String,
+      targetProject: String,
+      internalAccesses: Set<InternalAccess>
+    ): InternalAccessAdvice {
+      return InternalAccessAdvice(
+        sourceProject = sourceProject,
+        targetProject = targetProject,
+        internalAccesses = internalAccesses
+      )
+    }
   }
 }
 

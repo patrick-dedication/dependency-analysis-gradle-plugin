@@ -984,6 +984,15 @@ internal class ProjectPlugin(private val project: Project) {
         ).toJson()
       }
     })
+    // Analyzes internal access patterns between modules.
+    val internalAccessAnalysisTask = tasks.register("internalAccessAnalysis$taskNameSuffix", InternalAccessAnalysisTask::class.java) {
+      it.classes.setFrom(
+        configurations.getByName(dependencyAnalyzer.compileConfigurationName)
+          .filter { it.name.endsWith(".jar") }
+      )
+      it.projectPath.set(thisProjectPath)
+      it.output.set(outputPaths.internalAccessAnalysisPath)
+    }
 
     val usagesExclusionsProvider = provider {
       with(dagpExtension.usageHandler.exclusionsHandler) {
