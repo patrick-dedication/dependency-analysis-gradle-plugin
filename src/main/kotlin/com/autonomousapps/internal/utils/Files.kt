@@ -12,4 +12,9 @@ internal object Files {
   fun asPackagePath(file: File): String {
     return relativize(file, "build/classes/kotlin/main/")
   }
+
+  fun File.asSequenceOfClassFiles(): Sequence<File> {
+    check(isDirectory) { "Expected directory. Was '${absolutePath}'" }
+    return walkBottomUp().filter { it.isFile }.filterToClassFiles()
+  }
 }

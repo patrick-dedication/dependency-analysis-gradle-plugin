@@ -7,6 +7,7 @@ package com.autonomousapps.tasks
 import com.autonomousapps.internal.KotlinMetadataVisitor
 import com.autonomousapps.internal.asm.ClassReader
 import com.autonomousapps.internal.utils.*
+import com.autonomousapps.internal.utils.Files.asSequenceOfClassFiles
 import com.autonomousapps.model.internal.InlineMemberCapability
 import com.autonomousapps.model.internal.KtFile
 import com.autonomousapps.model.internal.PhysicalArtifact
@@ -221,9 +222,7 @@ internal class KotlinMagicFinder(
           return KotlinCapabilities.EMPTY
         }
 
-        artifact.file.walkBottomUp()
-          .filter { it.isFile }
-          .filterToClassFiles()
+        artifact.file.asSequenceOfClassFiles()
           .mapNotNull { classFile ->
             val kotlinMagic = readClass(
               classFile.inputStream().use { ClassReader(it.readBytes()) },
